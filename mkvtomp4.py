@@ -1,55 +1,63 @@
 import os
 import subprocess
-import sys
 
 def main():
-    if len(sys.argv) != 2:
-        print("Usage: python mkvtomp4.py <movie_file.mkv>")
-        sys.exit(1)
+    # Get the directory where the Python script is located
+    script_dir = os.path.dirname(os.path.abspath(__file__))
 
-    input_file = sys.argv[1]
+    # List all MKV files in the script directory
+    files = [f for f in os.listdir(script_dir) if f.endswith(".mkv")]
 
-    if not os.path.isfile(input_file):
-        print(f"Error: '{input_file}' does not exist.")
-        sys.exit(1)
+    succesful_files = 0
+    unsuccessful_files = 0
 
-    # Extract the directory path and base name without extension (for output file)
-    input_dir = os.path.dirname(input_file)
-    base_name = os.path.splitext(os.path.basename(input_file))[0]
+    for input_file in files:
+        # Check if the file is an MKV file
+        if not input_file.lower().endswith(".mkv"):
+            print(f"Skipping {input_file}. Not an MKV file. \n\n")
+            continue
 
-    # Construct the output file path
-    output_file = os.path.join(input_dir, f"{base_name}.mp4")
+        # Construct the full path of the input file
+        input_file = os.path.join(script_dir, input_file)
 
-    # Construct the FFmpeg command
-    ffmpeg_command = [
-        "ffmpeg",
-        "-i", input_file,
-        "-map", "0:v:0",
-        "-c", "copy",
-    ]
+        # Extract the directory path and base name without extension (for output file)
+        input_dir = os.path.dirname(input_file)
+        base_name = os.path.splitext(os.path.basename(input_file))[0]
 
-    # Check for the presence of audio streams
-    audio_stream_count = get_stream_count(input_file, "a")
-    if audio_stream_count > 0:
-        ffmpeg_command.extend(["-map", "0", "-c:a", "copy"])
-        print(f"Audio stream count: {audio_stream_count}")
+        # Construct the output file path
+        output_file = os.path.join(input_dir, f"{base_name}.mp4")
 
-    # Check for the presence of subtitle streams
-    subtitle_stream_count = get_stream_count(input_file, "s")
-    if subtitle_stream_count > 0:
-        ffmpeg_command.extend(["-c:s", "copy"])
-        print(f"Subtitle stream count: {subtitle_stream_count}")
-    else:
-        print("No subtitle streams found in the input file. Subtitles will not be included.")
+        # Construct the FFmpeg command
+        ffmpeg_command = [
+            "ffmpeg",
+            "-i", input_file,
+            "-map", "0:v:0",
+            "-c", "copy",
+        ]
 
-    ffmpeg_command.extend(["-strict", "unofficial", output_file])
+        # Check for the presence of audio streams
+        audio_stream_count = get_stream_count(input_file, "a")
+        if audio_stream_count > 0:
+            ffmpeg_command.extend(["-map", "0", "-c:a", "copy"])
 
-    try:
-        # Run FFmpeg command
-        subprocess.run(ffmpeg_command, check=True)
-        print(f"Conversion complete. Output file: {output_file}")
-    except subprocess.CalledProcessError as e:
-        print(f"Error: FFmpeg command failed with exit code {e.returncode}")
+        # Check for the presence of subtitle streams
+        subtitle_stream_count = get_stream_count(input_file, "s")
+        if subtitle_stream_count > 0:
+            ffmpeg_command.extend(["-c:s", "copy"])
+
+        ffmpeg_command.extend(["-strict", "unofficial", output_file])
+
+        try:
+            # Run FFmpeg command
+            subprocess.run(ffmpeg_command, check=True)
+            print(f"Conversion of file complete. Output file: {output_file} \n\n\n")
+            succesful_files += 1
+        except subprocess.CalledProcessError as e:
+            print(f"Error: FFmpeg command failed with exit code {e.returncode} \n\n\n")
+            unsuccessful_files += 1
+
+    print(f"All done. succesfully converted {succesful_files} files, {unsuccessful_files} files failed. \n\n")
+    input("Press Enter to finish...")
 
 def get_stream_count(input_file, stream_type):
     try:
