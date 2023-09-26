@@ -43,7 +43,7 @@ def main():
         # Check for the presence of subtitle streams
         subtitle_stream_count = get_stream_count(input_file, "s")
         if subtitle_stream_count > 0:
-            ffmpeg_command.extend(["-c:s", "copy"])
+            ffmpeg_command.extend(["-c:s", "mov_text"])
 
         ffmpeg_command.extend(["-strict", "unofficial", output_file])
 
