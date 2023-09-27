@@ -5,6 +5,10 @@ def main():
     # Get the directory where the Python script is located
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
+    # Create a 'Converted' folder if it doesn't exist
+    converted_folder = os.path.join(script_dir, 'Converted')
+    os.makedirs(converted_folder, exist_ok=True)
+
     # List all MKV files in the script directory
     files = [f for f in os.listdir(script_dir) if f.endswith(".mkv")]
 
@@ -25,25 +29,20 @@ def main():
         base_name = os.path.splitext(os.path.basename(input_file))[0]
 
         # Construct the output file path
-        output_file = os.path.join(input_dir, f"{base_name}.mp4")
+        output_file = os.path.join(converted_folder, f"{base_name}.mp4")
 
         # Construct the FFmpeg command
         ffmpeg_command = [
             "ffmpeg",
             "-i", input_file,
-            "-map", "0:v:0",
             "-c", "copy",
         ]
-
-        # Check for the presence of audio streams
-        audio_stream_count = get_stream_count(input_file, "a")
-        if audio_stream_count > 0:
-            ffmpeg_command.extend(["-map", "0", "-c:a", "copy"])
 
         # Check for the presence of subtitle streams
         subtitle_stream_count = get_stream_count(input_file, "s")
         if subtitle_stream_count > 0:
-            ffmpeg_command.extend(["-c:s", "mov_text"])
+            print(f"Subtitle stream(s) detected : {subtitle_stream_count}\n\n")
+            ffmpeg_command.extend(["-c:s", "mov_text"]) #this doesnt work yet
 
         ffmpeg_command.extend(["-strict", "unofficial", output_file])
 
@@ -65,7 +64,7 @@ def get_stream_count(input_file, stream_type):
         ffprobe_command = [
             "ffprobe",
             "-v", "error",
-            "-select_streams", f"{stream_type}:0",
+            "-select_streams", f"{stream_type}",
             "-show_entries", "stream=index",
             "-of", "default=nw=1:nk=1",
             input_file,
