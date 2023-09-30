@@ -1,9 +1,14 @@
 import os
 import subprocess
+from pymediainfo import MediaInfo
 
 def main():
     # Get the directory where the Python script is located
     script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Create a 'Temp' folder if it doesn't exist
+    temp_folder = os.path.join(script_dir, 'Temp')
+    os.makedirs(temp_folder, exist_ok=True)
 
     # Create a 'Converted' folder if it doesn't exist
     converted_folder = os.path.join(script_dir, 'Converted')
@@ -25,36 +30,60 @@ def main():
         input_file = os.path.join(script_dir, input_file)
 
         # Extract the directory path and base name without extension (for output file)
-        input_dir = os.path.dirname(input_file)
         base_name = os.path.splitext(os.path.basename(input_file))[0]
+
+
+        # Contruct the temporary file path
+        temp_file = os.path.join(temp_folder, f"{base_name}.mp4")
 
         # Construct the output file path
         output_file = os.path.join(converted_folder, f"{base_name}.mp4")
 
+        frame_rate = get_frame_rate(input_file)
+
         # Construct the FFmpeg command
         ffmpeg_command = [
             "ffmpeg",
+            "-y",
             "-i", input_file,
-            "-c", "copy",
+            "-strict", 
+            "experimental", 
+            "-loglevel", 
+            "error", 
+            "-stats",
+            "-map",
+            "0:v?",
+            "-map",
+            "0:a?",
+            "-map",
+            "0:s?",
+            "-dn",
+            "-map_chapters",
+            "-1",
+            "-movflags",
+            "+faststart",
+            "-c:v", "copy",
+            "-c:a", "copy",
+            "-c:s", "mov_text",
+            "-strict", "-2",
         ]
 
-        # Check for the presence of subtitle streams
-        subtitle_stream_count = get_stream_count(input_file, "s")
-        if subtitle_stream_count > 0:
-            print(f"Subtitle stream(s) detected : {subtitle_stream_count}\n\n")
-            ffmpeg_command.extend(["-c:s", "mov_text"]) #this doesnt work yet
-
-        ffmpeg_command.extend(["-strict", "unofficial", output_file])
+        ffmpeg_command.extend([temp_file])
 
         try:
             # Run FFmpeg command
+            print(f"Command is: {ffmpeg_command}")
             subprocess.run(ffmpeg_command, check=True)
-            print(f"Conversion of file complete. Output file: {output_file} \n\n\n")
+            print(f"Conversion of file complete. Temp file: {temp_file} \n\n\n")
+            subprocess.run(["./mp4fpsmod", frame_rate, "-o", output_file, temp_file])
+            # Remove temp file
+            os.remove(temp_file)
             succesful_files += 1
         except subprocess.CalledProcessError as e:
             print(f"Error: FFmpeg command failed with exit code {e.returncode} \n\n\n")
             unsuccessful_files += 1
 
+    
     print(f"All done. succesfully converted {succesful_files} files, {unsuccessful_files} files failed. \n\n")
     input("Press Enter to finish...")
 
@@ -81,6 +110,28 @@ def get_stream_count(input_file, stream_type):
 
     except Exception as e:
         return 0
+
+def get_frame_rate(input_file):
+    try:
+        media_info = MediaInfo.parse(input_file)
+        for track in media_info.tracks:
+            if track.track_type == 'Video':
+                frame_rate = track.frame_rate
+                duration = 0
+                
+                if frame_rate=="23.976": duration= "--fps 0:24000/1001"
+                if frame_rate=="24.000": duration= "--fps 0:24"
+                if frame_rate=="25.000": duration= "--fps 0:25"
+                if frame_rate=="30.000": duration= "--fps 0:30"
+                if frame_rate=="48.000": duration= "--fps 0:48"
+                if frame_rate=="50.000": duration= "--fps 0:35"
+                if frame_rate=="60.000": duration= "--fps 0:60"
+                
+                return duration
+        return None
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
 
 if __name__ == "__main__":
     main()
