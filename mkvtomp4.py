@@ -6,10 +6,6 @@ def main():
     # Get the directory where the Python script is located
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
-    # Create a 'Temp' folder if it doesn't exist
-    temp_folder = os.path.join(script_dir, 'Temp')
-    os.makedirs(temp_folder, exist_ok=True)
-
     # Create a 'Converted' folder if it doesn't exist
     converted_folder = os.path.join(script_dir, 'Converted')
     os.makedirs(converted_folder, exist_ok=True)
@@ -31,10 +27,6 @@ def main():
 
         # Extract the directory path and base name without extension (for output file)
         base_name = os.path.splitext(os.path.basename(input_file))[0]
-
-
-        # Contruct the temporary file path
-        temp_file = os.path.join(temp_folder, f"{base_name}.mp4")
 
         # Construct the output file path
         output_file = os.path.join(converted_folder, f"{base_name}.mp4")
@@ -68,16 +60,16 @@ def main():
             "-strict", "-2",
         ]
 
-        ffmpeg_command.extend([temp_file])
+        ffmpeg_command.extend([output_file])
 
         try:
             # Run FFmpeg command
             print(f"Command is: {ffmpeg_command}")
             subprocess.run(ffmpeg_command, check=True)
-            print(f"Conversion of file complete. Temp file: {temp_file} \n\n\n")
-            subprocess.run(["./mp4fpsmod", frame_rate, "-o", output_file, temp_file])
-            # Remove temp file
-            os.remove(temp_file)
+            print(f"Conversion of file complete. Temp file: {output_file} \n\n\n")
+
+            # Run MP4FPSMOD command to fix variable framerate
+            subprocess.run(["./mp4fpsmod", frame_rate, "-1", output_file])
             succesful_files += 1
         except subprocess.CalledProcessError as e:
             print(f"Error: FFmpeg command failed with exit code {e.returncode} \n\n\n")
