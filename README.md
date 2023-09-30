@@ -21,10 +21,11 @@ Before using this script, ensure you have the following dependencies installed:
 ```bash
 pip install pymediainfo
 ```
+- You might need to add the **libmediainfo.0.dylib** file to the folder.
 
 ## How to Use
 
-1. Place your MKV files in the same directory as this script.
+1. Place your MKV files in the same directory as the mkvtomp4.py script.
 
 2. Ensure that the `mp4fpsmod` executable is in the same directory as the script. You can rename it to `mp4fpsmod` if needed.
 
