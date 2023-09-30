@@ -1,4 +1,4 @@
-# MKV to MP4 Converter with Frame Rate Fix
+# Batch MKV to MP4 Converter with Frame Rate Fix
 
 This Python script is designed to convert MKV video files to MP4 format while also fixing potential issues with variable frame rates. The conversion is achieved using FFmpeg, a powerful multimedia framework, and the frame rate correction is done using the `mp4fpsmod` tool. Additionally, the script utilizes the `pymediainfo` library to extract video file information.
 
