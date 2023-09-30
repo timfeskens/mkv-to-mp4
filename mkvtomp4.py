@@ -69,8 +69,12 @@ def main():
             print(f"Conversion of file complete. Temp file: {output_file} \n\n\n")
 
             # Run MP4FPSMOD command to fix variable framerate
-            subprocess.run(["./mp4fpsmod", frame_rate, "-1", output_file])
-            succesful_files += 1
+            if (subprocess.run(["./mp4fpsmod", "--fps", frame_rate, "-i", output_file], check=True)):
+                print(f"MP4FPSMOD command complete.\n\n\n")
+                succesful_files += 1
+            else:
+                print(f"MP4FPSMOD command failed.\n\n\n")
+                unsuccessful_files += 1
         except subprocess.CalledProcessError as e:
             print(f"Error: FFmpeg command failed with exit code {e.returncode} \n\n\n")
             unsuccessful_files += 1
@@ -111,13 +115,13 @@ def get_frame_rate(input_file):
                 frame_rate = track.frame_rate
                 duration = 0
                 
-                if frame_rate=="23.976": duration= "--fps 0:24000/1001"
-                if frame_rate=="24.000": duration= "--fps 0:24"
-                if frame_rate=="25.000": duration= "--fps 0:25"
-                if frame_rate=="30.000": duration= "--fps 0:30"
-                if frame_rate=="48.000": duration= "--fps 0:48"
-                if frame_rate=="50.000": duration= "--fps 0:35"
-                if frame_rate=="60.000": duration= "--fps 0:60"
+                if frame_rate=="23.976": duration= "0:24000/1001"
+                if frame_rate=="24.000": duration= "0:24"
+                if frame_rate=="25.000": duration= "0:25"
+                if frame_rate=="30.000": duration= "0:30"
+                if frame_rate=="48.000": duration= "0:48"
+                if frame_rate=="50.000": duration= "0:35"
+                if frame_rate=="60.000": duration= "0:60"
                 
                 return duration
         return None
