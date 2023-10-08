@@ -4,6 +4,8 @@ import re
 import json
 from pymediainfo import MediaInfo
 
+mp4fpsmod_path = "/Users/timfeskens/Documents/GitHub/dv-mkv-to-mp4/mp4fpsmod"
+
 def main():
     # Get the directory where the Python script is located
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -78,7 +80,7 @@ def main():
 
             # Run MP4FPSMOD command to fix variable framerate
             print("Task 7 |".rjust(11), "Starting MP4FPSMOD to convert framerate")
-            if (subprocess.run(["./mp4fpsmod", "--fps", frame_rate, "-i", output_file], check=True)):
+            if (subprocess.run([mp4fpsmod_path, "--fps", frame_rate, "-i", output_file], check=True)):
                 print("|".rjust(11), "MP4FPSMOD command complete")
                 successful_files += 1
             else:
@@ -174,7 +176,6 @@ def extract_subtitles(mkv_file, converted_folder):
                     returncode = os.system(command)
                     if returncode == 0:
                         print("|".rjust(11), "Created :", subtitle_name)
-                        input("Press Enter to continue... ")
                     else:
                         print("Error in creating the subtitle file!")
                 count += 1
