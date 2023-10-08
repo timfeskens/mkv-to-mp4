@@ -5,6 +5,7 @@ import json
 from pymediainfo import MediaInfo
 
 mp4fpsmod_path = "/Users/timfeskens/Documents/GitHub/dv-mkv-to-mp4/mp4fpsmod"
+mkvextract_path="/Applications/MKVToolNix-73.0.0.app/Contents/MacOS/mkvextract"
 
 def main():
     # Get the directory where the Python script is located
@@ -30,7 +31,7 @@ def main():
         input_file = os.path.join(script_dir, file)
 
         # Extract subtitles using mkvextract
-        extract_subtitles(file, converted_folder)
+        extract_subtitles(file, script_dir, converted_folder)
 
         # Extract the directory path and base name without extension (for output file)
         base_name = os.path.splitext(os.path.basename(input_file))[0]
@@ -133,11 +134,9 @@ def json_mkvinfo(mkv_file):
     return mkv_info
 
 
-def extract_subtitles(mkv_file, converted_folder):
-    directory = os.path.dirname(os.path.abspath(__file__))
-
+def extract_subtitles(mkv_file, script_dir, converted_folder):
     print("File Name |", mkv_file)
-    mkv_file_path = os.path.join(directory, mkv_file)
+    mkv_file_path = os.path.join(script_dir, mkv_file)
     mkv_info = json_mkvinfo(mkv_file_path)
 
     print("Task 2 |".rjust(11), "Collecting the streams (tracks) info.")
@@ -162,7 +161,7 @@ def extract_subtitles(mkv_file, converted_folder):
             if stream["codec_type"] == "subtitle":
                 language = stream["tags"].get("language", "und")
                 title = stream["tags"].get("title", "Undefined")
-                if language == "dut" or language == "eng":
+                if language == "dut" or language == "eng" or language == "und":
                     extension = ""
                     if title == "Undefined":
                         extension = "." + language + ".srt"
@@ -170,16 +169,18 @@ def extract_subtitles(mkv_file, converted_folder):
                         extension = "." + language + "." + title + ".srt"
                     subtitle_name = mkv_file.replace(".mkv", extension)
                     subtitle_path = os.path.join(subtitles_directory_path, subtitle_name)
-
-                    # ffmpeg copies the subtitle track from the mkv file to the subtitles folder.
-                    command = "ffmpeg -i \"" + mkv_file_path + "\" -map 0:s:" + str(count) + " \"" + subtitle_path + "\" -v quiet"
-                    returncode = os.system(command)
-                    if returncode == 0:
+                    
+                    command = [mkvextract_path, 'tracks', mkv_file_path, f"{count}:{subtitle_path}.srt"]
+                    result = subprocess.run(command, check=True)
+                    if result:
                         print("|".rjust(11), "Created :", subtitle_name)
                     else:
                         print("Error in creating the subtitle file!")
-                count += 1
-                
+                    continue
+                else:
+                    print("|".rjust(11),"Skipping subtitle track with language code", language)
+            count += 1
+            
         if count == 0:
             print("|".rjust(11), "There are no subtitle tracks present in this file.")
         else:
