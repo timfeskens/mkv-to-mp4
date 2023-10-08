@@ -181,11 +181,8 @@ def extract_subtitles(mkv_file, converted_folder):
                 
         if count == 0:
             print("|".rjust(11), "There are no subtitle tracks present in this file.")
-            print("|".rjust(11), "Removing the subtitles directory!")
-            os.rmdir(subtitles_directory_path)  
-            print("|".rjust(11), "Removed ", subtitles_directory_name, "successfully!")
         else:
-            print("Total Subtile Streams :", count)
+            print("Total Subtitle Streams :", count)
 
         print('')
 
